@@ -1,43 +1,42 @@
-# Otomotiv Bakım Yönetim PWA
+# Bakım Takip – GitHub Pages (github.io)
 
-Google Apps Script (GAS) ile geliştirilmiş, Google Sheets tabanlı Otomotiv Bakım Yönetim Progressive Web App (PWA).
+Arayüz burada (github.io), veriler **Google Sheets**'te tutulur. GAS sadece API olarak kullanılır.
 
-## Bileşenler
+## Kurulum
 
-1. **Kullanıcı Arayüzü (Raporlama)** – Arıza raporu oluşturma, LocalStorage ile kalıcı giriş
-2. **Bakım Paneli (Technician)** – Personel atama, iş başlatma, arıza tamamlama
-3. **TV Dashboard** – 7/24 ekran, 30 saniyede bir veri yenileme, önceliğe göre renkler
+### 1. Google Apps Script (API)
 
-## Kurulum (Google Apps Script)
+- Projeyi **Google Sheet**'ten açın (Uzantılar → Apps Script).
+- **Code.gs** içeriğini bu repodaki **Code.gs** ile değiştirin (API sürümü: doGet JSONP, doPost form).
+- **setSpreadsheetId** fonksiyonunu Script editöründe bir kez çalıştırın.
+- **Script özellikleri:** `TECHNICIAN_PASSWORD` = bakım paneli şifresi.
+- **Dağıtım** → **Yeni dağıtım** → **Web uygulaması**
+  - Kim çalıştırır: **Ben**
+  - Erişim: **Herkes**
+  - Dağıt → çıkan **URL'yi** kopyalayın (örn. `https://script.google.com/macros/s/.../exec`).
 
-1. [Google Drive](https://drive.google.com) → **Yeni** → **Google Apps Script**
-2. Varsayılan `Code.gs` içeriğini bu projedeki `Code.gs` ile değiştirin
-3. **Dosya** → **Yeni** → **HTML dosyası** ile `index` ve `Dashboard` adında iki HTML dosyası oluşturun; içeriklerini bu projedeki `index.html` ve `Dashboard.html` ile değiştirin
-4. Script’i bir **Google Sheets** ile ilişkilendirin: **Dosya** → **Yeni** → **Spreadsheet** oluşturun veya mevcut bir Sheet’i kullanın. Script editöründe **Proje ayarları** veya Sheet’te **Uzantılar** → **Apps Script** ile aynı projeyi açın
-5. **Spreadsheet bağlama (önemli):** Web uygulamasında “aktif sheet” olmadığı için Sheet’i bağlamanız gerekir. Script editörünü **Google Sheet’ten** açın (Sheet’te **Uzantılar** → **Apps Script**). Üst menüden **setSpreadsheetId** fonksiyonunu seçip **Çalıştır** (▶) ile bir kez çalıştırın. Böylece kullanılacak Sheet kaydedilir; raporlar ve Bakım paneli bu Sheet’e yazılır/okunur.
-6. İlk çalıştırmada `Code.gs` içindeki `getActiveSheet()` ve `getArchiveSheet()` fonksiyonları **Aktif_Arızalar** ve **Arıza_Arşivi** sayfalarını otomatik oluşturur.
-7. **Bakım paneli şifresi:** Proje Ayarları (dişli) → **Script özellikleri** → Özellik ekle: Anahtar `TECHNICIAN_PASSWORD`, Değer: kullanacağınız şifre → Kaydet.
-8. **Dağıtım** → **Yeni dağıtım** → **Web uygulaması**
-   - Açıklama: “Bakım Yönetim”
-   - **Kullanıcı olarak**: Kendiniz
-   - **Erişim**: Herkes (veya kurum içi)
-   - **Dağıt** ile URL’i alın
+### 2. config.js
 
-## URL’ler
+- **config.js** dosyasında `GAS_URL` değişkenine, yukarıda kopyaladığınız GAS Web App URL'sini yapıştırın.
 
-- Ana uygulama (Raporlama + Bakım Paneli): `[Web App URL]`
-- TV Dashboard: `[Web App URL]?page=dashboard`
-- PWA manifest (Ana ekrana ekleme): `[Web App URL]?page=manifest`
+```javascript
+var GAS_URL = 'https://script.google.com/macros/s/SIZIN_ID/exec';
+```
 
-## Teknik Özellikler
+### 3. GitHub Pages
 
-- **Backend:** Google Sheets (Aktif_Arızalar, Arıza_Arşivi), UTC+3 zaman damgaları
-- **Fonksiyonlar:** `saveReport`, `assignStaff`, `startJob`, `completeJob`, `getActiveFaults`
-- **Frontend:** Bootstrap 5, responsive, dark theme
-- **Bakım Paneli:** Şifre ile giriş (Script özelliği `TECHNICIAN_PASSWORD`); oturum sessionStorage ile tutulur, Çıkış ile sonlandırılır
-- **PWA:** Manifest ile “Ana ekrana ekle” desteği
-- **TV Dashboard:** 30 saniyede bir sayfa yenilenmeden veri güncelleme; Çok Acil (yanıp sönen kırmızı), Acil (sarı), Normal (mavi)
+- Bu klasördeki dosyaları (`config.js`, `index.html`, `dashboard.html`) **bakimtakip** reposuna commit/push edin.
+- Repo ayarlarında **Pages** → Source: **main** (veya master) → **/ (root)** veya bu klasörü root yapın.
+- Site adresi: `https://kullaniciadi.github.io/bakimtakip/` (veya repo adına göre).
 
-## Lisans
+## Dosyalar
 
-Bu proje örnek kullanım içindir.
+- **index.html** – Raporlama + Bakım paneli (şifre ile).
+- **dashboard.html** – TV paneli (30 saniyede bir yenilenir).
+- **config.js** – GAS Web App URL (burayı mutlaka doldurun).
+
+## Nasıl çalışır
+
+- **Veri okuma:** Tarayıcı GAS URL'ye JSONP isteği atar (`?action=getFaults&callback=...`), cevap Sheet'ten okunur.
+- **Veri yazma:** Form POST ile GAS'e gider, GAS Sheet'e yazar; cevap iframe içinde `postMessage` ile sayfaya iletilir.
+- Arızalar ve arşiv **Google Sheets**'te (Aktif_Arızalar, Arıza_Arşivi) kalır.
