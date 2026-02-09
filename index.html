@@ -202,7 +202,7 @@
                 <input type="text" class="form-control" id="report-tezgahKodu" placeholder="Örn: TZ-01">
               </div>
               <div class="col-12">
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" class="btn btn-primary" id="btn-submit-report">
                   <i class="bi bi-send me-1"></i> Raporu Gönder
                 </button>
               </div>
@@ -217,9 +217,14 @@
       <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
           <span><i class="bi bi-list-ul me-2"></i> Aktif Arızalar</span>
-          <button type="button" class="btn btn-sm btn-outline-primary" id="btn-refresh-faults">
-            <i class="bi bi-arrow-clockwise"></i> Yenile
-          </button>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-outline-primary" id="btn-refresh-faults">
+              <i class="bi bi-arrow-clockwise"></i> Yenile
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-technician-logout" title="Bakım panelinden çıkış">
+              <i class="bi bi-box-arrow-right"></i> Çıkış
+            </button>
+          </div>
         </div>
         <div class="card-body p-0">
           <div class="table-responsive">
@@ -244,6 +249,29 @@
         </div>
       </div>
     </section>
+  </div>
+
+  <!-- Modal: Bakım Paneli Şifre -->
+  <div class="modal fade" id="modal-technician-password" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content bg-dark border border-secondary">
+        <div class="modal-header border-secondary">
+          <h5 class="modal-title"><i class="bi bi-lock me-2"></i> Bakım Paneli Girişi</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <label class="form-label">Şifre</label>
+          <input type="password" class="form-control bg-dark text-light border-secondary" id="technician-password" placeholder="Şifrenizi girin" autocomplete="current-password">
+          <div class="form-text text-muted small">Sadece yetkili personel erişebilir.</div>
+        </div>
+        <div class="modal-footer border-secondary">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+          <button type="button" class="btn btn-primary" id="btn-technician-login">
+            <i class="bi bi-box-arrow-in-right me-1"></i> Giriş
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Modal: Personel Ata -->
@@ -321,6 +349,7 @@
         bolum: 'bakim_bolum',
         sicilNo: 'bakim_sicilNo'
       };
+      const TECH_AUTH_KEY = 'bakim_panel_authorized';
 
       // Persistent Login: form alanlarını LocalStorage'dan doldur
       function loadSavedUser() {
@@ -351,11 +380,34 @@
         t.show();
       }
 
+      function isTechnicianAuthorized() {
+        return sessionStorage.getItem(TECH_AUTH_KEY) === '1';
+      }
+
+      function setTechnicianAuthorized(ok) {
+        if (ok) sessionStorage.setItem(TECH_AUTH_KEY, '1');
+        else sessionStorage.removeItem(TECH_AUTH_KEY);
+      }
+
+      function showTechnicianPanel() {
+        document.querySelectorAll('.nav-pills .nav-link').forEach(function(l) { l.classList.remove('active'); });
+        document.querySelector('[data-tab="technician"]').classList.add('active');
+        document.getElementById('section-reporting').style.display = 'none';
+        document.getElementById('section-technician').style.display = 'block';
+        loadFaults();
+      }
+
       // Tab geçişi
       document.querySelectorAll('[data-tab]').forEach(function(link) {
         link.addEventListener('click', function(e) {
           e.preventDefault();
           var tab = this.getAttribute('data-tab');
+          if (tab === 'technician' && !isTechnicianAuthorized()) {
+            document.getElementById('technician-password').value = '';
+            new bootstrap.Modal(document.getElementById('modal-technician-password')).show();
+            document.getElementById('technician-password').focus();
+            return;
+          }
           document.querySelectorAll('.nav-pills .nav-link').forEach(function(l) { l.classList.remove('active'); });
           this.classList.add('active');
           document.getElementById('section-reporting').style.display = tab === 'reporting' ? 'block' : 'none';
@@ -364,9 +416,53 @@
         });
       });
 
+      // Bakım paneli şifre girişi
+      document.getElementById('btn-technician-login').addEventListener('click', function() {
+        var pwd = document.getElementById('technician-password').value;
+        google.script.run
+          .withSuccessFunction(function(res) {
+            if (res.success) {
+              setTechnicianAuthorized(true);
+              bootstrap.Modal.getInstance(document.getElementById('modal-technician-password')).hide();
+              document.getElementById('technician-password').value = '';
+              showTechnicianPanel();
+              showToast('Giriş başarılı.');
+            } else {
+              showToast('Şifre hatalı.', true);
+              document.getElementById('technician-password').focus();
+            }
+          })
+          .withFailureFunction(function() {
+            showToast('Doğrulama yapılamadı.', true);
+          })
+          .validateTechnicianPassword(pwd);
+      });
+
+      document.getElementById('modal-technician-password').addEventListener('shown.bs.modal', function() {
+        document.getElementById('technician-password').focus();
+      });
+      document.getElementById('technician-password').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') document.getElementById('btn-technician-login').click();
+      });
+
+      // Bakım panelinden çıkış
+      document.getElementById('btn-technician-logout').addEventListener('click', function() {
+        setTechnicianAuthorized(false);
+        showToast('Bakım panelinden çıkış yapıldı.');
+        document.querySelectorAll('.nav-pills .nav-link').forEach(function(l) { l.classList.remove('active'); });
+        document.querySelector('[data-tab="reporting"]').classList.add('active');
+        document.getElementById('section-reporting').style.display = 'block';
+        document.getElementById('section-technician').style.display = 'none';
+      });
+
       // Rapor formu gönder
       document.getElementById('form-report').addEventListener('submit', function(e) {
         e.preventDefault();
+        var btn = document.getElementById('btn-submit-report');
+        if (typeof google === 'undefined' || !google.script || !google.script.run) {
+          showToast('Bu sayfa Google Apps Script web uygulaması olarak açılmalıdır. Dağıtım URL\'sini kullanın.', true);
+          return;
+        }
         saveUserToStorage();
         var payload = {
           ad: document.getElementById('report-ad').value.trim(),
@@ -378,22 +474,34 @@
           direktif: document.getElementById('report-direktif').value.trim(),
           tezgahKodu: document.getElementById('report-tezgahKodu').value.trim()
         };
-        google.script.run
-          .withSuccessFunction(function(res) {
-            if (res.success) {
-              showToast(res.message);
-              document.getElementById('form-report').reset();
-              loadSavedUser();
-              document.getElementById('report-arizaTipi').value = '';
-              document.getElementById('report-oncelik').value = '';
-            } else {
-              showToast(res.message, true);
-            }
-          })
-          .withFailureFunction(function(err) {
-            showToast('Sunucu hatası: ' + err.message, true);
-          })
-          .saveReport(payload);
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Gönderiliyor...';
+        try {
+          google.script.run
+            .withSuccessFunction(function(res) {
+              btn.disabled = false;
+              btn.innerHTML = '<i class="bi bi-send me-1"></i> Raporu Gönder';
+              if (res && res.success) {
+                showToast(res.message);
+                document.getElementById('form-report').reset();
+                loadSavedUser();
+                document.getElementById('report-arizaTipi').value = '';
+                document.getElementById('report-oncelik').value = '';
+              } else {
+                showToast((res && res.message) ? res.message : 'Kayıt yapılamadı.', true);
+              }
+            })
+            .withFailureFunction(function(err) {
+              btn.disabled = false;
+              btn.innerHTML = '<i class="bi bi-send me-1"></i> Raporu Gönder';
+              showToast('Sunucu hatası: ' + (err && err.message ? err.message : 'Bağlantı hatası'), true);
+            })
+            .saveReport(payload);
+        } catch (err) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="bi bi-send me-1"></i> Raporu Gönder';
+          showToast('Hata: ' + (err && err.message ? err.message : 'Bilinmeyen hata'), true);
+        }
       });
 
       function loadFaults() {
@@ -402,7 +510,12 @@
         tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">Yükleniyor...</td></tr>';
         google.script.run
           .withSuccessFunction(function(list) {
-            if (!list || list.length === 0) {
+            if (list && list._error) {
+              showToast(list._error, true);
+              tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger py-4">' + list._error + '</td></tr>';
+              return;
+            }
+            if (!list || !Array.isArray(list) || list.length === 0) {
               tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">Aktif arıza yok.</td></tr>';
               return;
             }

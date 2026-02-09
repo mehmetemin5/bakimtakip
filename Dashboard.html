@@ -191,6 +191,11 @@
         }
         google.script.run
           .withSuccessFunction(function(list) {
+            if (list && list._error) {
+              contentEl.innerHTML = '<div class="error">' + list._error + '</div>';
+              return;
+            }
+            if (!Array.isArray(list)) list = [];
             render(list);
           })
           .withFailureFunction(function(err) {

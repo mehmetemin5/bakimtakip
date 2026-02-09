@@ -14,8 +14,10 @@ Google Apps Script (GAS) ile geliştirilmiş, Google Sheets tabanlı Otomotiv Ba
 2. Varsayılan `Code.gs` içeriğini bu projedeki `Code.gs` ile değiştirin
 3. **Dosya** → **Yeni** → **HTML dosyası** ile `index` ve `Dashboard` adında iki HTML dosyası oluşturun; içeriklerini bu projedeki `index.html` ve `Dashboard.html` ile değiştirin
 4. Script’i bir **Google Sheets** ile ilişkilendirin: **Dosya** → **Yeni** → **Spreadsheet** oluşturun veya mevcut bir Sheet’i kullanın. Script editöründe **Proje ayarları** veya Sheet’te **Uzantılar** → **Apps Script** ile aynı projeyi açın
-5. İlk çalıştırmada `Code.gs` içindeki `getActiveSheet()` ve `getArchiveSheet()` fonksiyonları **Aktif_Arızalar** ve **Arıza_Arşivi** sayfalarını otomatik oluşturur
-6. **Dağıtım** → **Yeni dağıtım** → **Web uygulaması**
+5. **Spreadsheet bağlama (önemli):** Web uygulamasında “aktif sheet” olmadığı için Sheet’i bağlamanız gerekir. Script editörünü **Google Sheet’ten** açın (Sheet’te **Uzantılar** → **Apps Script**). Üst menüden **setSpreadsheetId** fonksiyonunu seçip **Çalıştır** (▶) ile bir kez çalıştırın. Böylece kullanılacak Sheet kaydedilir; raporlar ve Bakım paneli bu Sheet’e yazılır/okunur.
+6. İlk çalıştırmada `Code.gs` içindeki `getActiveSheet()` ve `getArchiveSheet()` fonksiyonları **Aktif_Arızalar** ve **Arıza_Arşivi** sayfalarını otomatik oluşturur.
+7. **Bakım paneli şifresi:** Proje Ayarları (dişli) → **Script özellikleri** → Özellik ekle: Anahtar `TECHNICIAN_PASSWORD`, Değer: kullanacağınız şifre → Kaydet.
+8. **Dağıtım** → **Yeni dağıtım** → **Web uygulaması**
    - Açıklama: “Bakım Yönetim”
    - **Kullanıcı olarak**: Kendiniz
    - **Erişim**: Herkes (veya kurum içi)
@@ -32,6 +34,7 @@ Google Apps Script (GAS) ile geliştirilmiş, Google Sheets tabanlı Otomotiv Ba
 - **Backend:** Google Sheets (Aktif_Arızalar, Arıza_Arşivi), UTC+3 zaman damgaları
 - **Fonksiyonlar:** `saveReport`, `assignStaff`, `startJob`, `completeJob`, `getActiveFaults`
 - **Frontend:** Bootstrap 5, responsive, dark theme
+- **Bakım Paneli:** Şifre ile giriş (Script özelliği `TECHNICIAN_PASSWORD`); oturum sessionStorage ile tutulur, Çıkış ile sonlandırılır
 - **PWA:** Manifest ile “Ana ekrana ekle” desteği
 - **TV Dashboard:** 30 saniyede bir sayfa yenilenmeden veri güncelleme; Çok Acil (yanıp sönen kırmızı), Acil (sarı), Normal (mavi)
 
