@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="theme-color" content="#1a1d21">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Otomotiv Bakım Yönetim</title>
+  <link rel="manifest" href="<?= url ?>?page=manifest">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #1a1d21;
+      --bg-card: #25282c;
+      --accent: #0d6efd;
+      --accent-hover: #0b5ed7;
+      --text-muted: #adb5bd;
+      --priority-normal: #0d6efd;
+      --priority-urgent: #ffc107;
+      --priority-very-urgent: #dc3545;
+    }
+    body {
+      background: var(--bg-dark);
+      color: #e9ecef;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      padding-bottom: 80px;
+    }
+    .app-bar {
+      background: var(--bg-card);
+      border-bottom: 1px solid #333;
+      padding: 0.75rem 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-pills .nav-link {
+      color: var(--text-muted);
+      border-radius: 0.5rem;
+      font-weight: 500;
+    }
+    .nav-pills .nav-link.active {
+      background: var(--accent);
+      color: #fff;
+    }
+    .nav-pills .nav-link:hover:not(.active) {
+      color: #fff;
+      background: rgba(255,255,255,0.08);
+    }
+    .card {
+      background: var(--bg-card);
+      border: 1px solid #333;
+      border-radius: 0.75rem;
+    }
+    .card-header {
+      background: rgba(0,0,0,0.2);
+      border-bottom: 1px solid #333;
+      font-weight: 600;
+    }
+    .form-control, .form-select {
+      background: #1a1d21;
+      border: 1px solid #444;
+      color: #e9ecef;
+    }
+    .form-control:focus, .form-select:focus {
+      background: #1a1d21;
+      border-color: var(--accent);
+      color: #e9ecef;
+      box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+    .form-control::placeholder {
+      color: #6c757d;
+    }
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+    }
+    .btn-outline-primary {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .btn-outline-primary:hover {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-success { background: #198754; border-color: #198754; }
+    .btn-warning { background: #ffc107; border-color: #ffc107; color: #000; }
+    .btn-danger { background: #dc3545; border-color: #dc3545; }
+    .table-dark {
+      --bs-table-bg: var(--bg-card);
+      --bs-table-border-color: #333;
+      --bs-table-striped-bg: rgba(255,255,255,0.03);
+      color: #e9ecef;
+    }
+    .table-dark th, .table-dark td {
+      border-color: #333;
+      vertical-align: middle;
+    }
+    .badge-priority-normal { background: var(--priority-normal); }
+    .badge-priority-urgent { background: var(--priority-urgent); color: #000; }
+    .badge-priority-very-urgent { background: var(--priority-very-urgent); }
+    .saved-info {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .toast-container {
+      z-index: 1100;
+    }
+    .fault-row-normal { background: rgba(13, 110, 253, 0.15); }
+    .fault-row-urgent { background: rgba(255, 193, 7, 0.15); }
+    .fault-row-very-urgent { background: rgba(220, 53, 69, 0.2); }
+    @media (max-width: 576px) {
+      .btn-group-sm .btn { padding: 0.35rem 0.5rem; font-size: 0.8rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-bar">
+    <div class="container">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h1 class="h5 mb-0 text-white">
+          <i class="bi bi-tools"></i> Otomotiv Bakım Yönetim
+        </h1>
+        <ul class="nav nav-pills">
+          <li class="nav-item">
+            <a class="nav-link active" href="#" data-tab="reporting">
+              <i class="bi bi-clipboard-plus"></i> Raporlama
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" data-tab="technician">
+              <i class="bi bi-person-gear"></i> Bakım Paneli
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="container py-4">
+    <!-- Raporlama Ekranı -->
+    <section id="section-reporting" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <i class="bi bi-clipboard-plus me-2"></i> Yeni Arıza Raporu
+        </div>
+        <div class="card-body">
+          <form id="form-report">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Ad <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="report-ad" required placeholder="Adınız">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Soyad <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="report-soyad" required placeholder="Soyadınız">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Bölüm <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="report-bolum" required placeholder="Bölüm">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Sicil No <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="report-sicilNo" required placeholder="Sicil numarası">
+              </div>
+              <div class="col-12">
+                <div class="saved-info mb-1">
+                  <i class="bi bi-info-circle"></i> Bu bilgiler cihazınızda saklanır ve sonraki formlarda otomatik doldurulur.
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Arıza Tipi <span class="text-danger">*</span></label>
+                <select class="form-select" id="report-arizaTipi" required>
+                  <option value="">Seçiniz</option>
+                  <option value="Elektrik">Elektrik</option>
+                  <option value="Mekanik">Mekanik</option>
+                  <option value="Her İkisi">Her İkisi</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Öncelik <span class="text-danger">*</span></label>
+                <select class="form-select" id="report-oncelik" required>
+                  <option value="">Seçiniz</option>
+                  <option value="Normal">Normal</option>
+                  <option value="Acil">Acil</option>
+                  <option value="Çok Acil">Çok Acil</option>
+                </select>
+              </div>
+              <div class="col-12">
+                <label class="form-label">Direktif / Açıklama</label>
+                <textarea class="form-control" id="report-direktif" rows="2" placeholder="Arıza ile ilgili direktif veya açıklama"></textarea>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Tezgah / Makine Kodu</label>
+                <input type="text" class="form-control" id="report-tezgahKodu" placeholder="Örn: TZ-01">
+              </div>
+              <div class="col-12">
+                <button type="submit" class="btn btn-primary">
+                  <i class="bi bi-send me-1"></i> Raporu Gönder
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bakım Paneli (Technician) -->
+    <section id="section-technician" class="tab-content" style="display:none;">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <span><i class="bi bi-list-ul me-2"></i> Aktif Arızalar</span>
+          <button type="button" class="btn btn-sm btn-outline-primary" id="btn-refresh-faults">
+            <i class="bi bi-arrow-clockwise"></i> Yenile
+          </button>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-dark table-hover table-striped mb-0">
+              <thead>
+                <tr>
+                  <th>Saat</th>
+                  <th>Raporlayan</th>
+                  <th>Bölüm</th>
+                  <th>Tezgah</th>
+                  <th>Öncelik</th>
+                  <th>Atanan</th>
+                  <th>Durum</th>
+                  <th>İşlem</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-faults">
+                <tr><td colspan="8" class="text-center text-muted py-4">Yükleniyor...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Modal: Personel Ata -->
+  <div class="modal fade" id="modal-assign" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content bg-dark border border-secondary">
+        <div class="modal-header border-secondary">
+          <h5 class="modal-title">Personel Ata</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="assign-satirId">
+          <label class="form-label">Atanan Personel Adı</label>
+          <input type="text" class="form-control bg-dark text-light border-secondary" id="assign-personel" placeholder="Personel adı soyadı">
+        </div>
+        <div class="modal-footer border-secondary">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+          <button type="button" class="btn btn-primary" id="btn-assign-confirm">Ata</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Tamamlama Formu -->
+  <div class="modal fade" id="modal-complete" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content bg-dark border border-secondary">
+        <div class="modal-header border-secondary">
+          <h5 class="modal-title">Arıza Tamamlandı</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="complete-satirId">
+          <div class="mb-3">
+            <label class="form-label">Kök Neden <span class="text-danger">*</span></label>
+            <input type="text" class="form-control bg-dark text-light border-secondary" id="complete-kokNeden" required placeholder="Arızanın kök nedeni">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Hata Tanımı <span class="text-danger">*</span></label>
+            <textarea class="form-control bg-dark text-light border-secondary" id="complete-hataTanimi" rows="2" required placeholder="Tespit edilen hata"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Yapılan İşlem <span class="text-danger">*</span></label>
+            <textarea class="form-control bg-dark text-light border-secondary" id="complete-yapilanIslem" rows="3" required placeholder="Yapılan bakım/onarım işlemi"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer border-secondary">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+          <button type="button" class="btn btn-success" id="btn-complete-confirm">
+            <i class="bi bi-check-lg"></i> Tamamlandı Olarak İşaretle
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="toast" class="toast align-items-center text-bg-primary border-0" role="alert">
+      <div class="d-flex">
+        <div class="toast-body" id="toast-body"></div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    (function() {
+      'use strict';
+
+      const STORAGE_KEYS = {
+        ad: 'bakim_ad',
+        soyad: 'bakim_soyad',
+        bolum: 'bakim_bolum',
+        sicilNo: 'bakim_sicilNo'
+      };
+
+      // Persistent Login: form alanlarını LocalStorage'dan doldur
+      function loadSavedUser() {
+        ['ad', 'soyad', 'bolum', 'sicilNo'].forEach(function(key) {
+          var el = document.getElementById('report-' + (key === 'sicilNo' ? 'sicilNo' : key));
+          if (el) {
+            var val = localStorage.getItem(STORAGE_KEYS[key]);
+            if (val) el.value = val;
+          }
+        });
+      }
+
+      function saveUserToStorage() {
+        ['ad', 'soyad', 'bolum', 'sicilNo'].forEach(function(key) {
+          var el = document.getElementById('report-' + (key === 'sicilNo' ? 'sicilNo' : key));
+          if (el && el.value) localStorage.setItem(STORAGE_KEYS[key], el.value);
+        });
+      }
+
+      function showToast(message, isError) {
+        var toastEl = document.getElementById('toast');
+        var body = document.getElementById('toast-body');
+        if (!toastEl || !body) return;
+        toastEl.classList.remove('text-bg-primary', 'text-bg-danger');
+        toastEl.classList.add(isError ? 'text-bg-danger' : 'text-bg-primary');
+        body.textContent = message;
+        var t = new bootstrap.Toast(toastEl);
+        t.show();
+      }
+
+      // Tab geçişi
+      document.querySelectorAll('[data-tab]').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+          e.preventDefault();
+          var tab = this.getAttribute('data-tab');
+          document.querySelectorAll('.nav-pills .nav-link').forEach(function(l) { l.classList.remove('active'); });
+          this.classList.add('active');
+          document.getElementById('section-reporting').style.display = tab === 'reporting' ? 'block' : 'none';
+          document.getElementById('section-technician').style.display = tab === 'technician' ? 'block' : 'none';
+          if (tab === 'technician') loadFaults();
+        });
+      });
+
+      // Rapor formu gönder
+      document.getElementById('form-report').addEventListener('submit', function(e) {
+        e.preventDefault();
+        saveUserToStorage();
+        var payload = {
+          ad: document.getElementById('report-ad').value.trim(),
+          soyad: document.getElementById('report-soyad').value.trim(),
+          bolum: document.getElementById('report-bolum').value.trim(),
+          sicilNo: document.getElementById('report-sicilNo').value.trim(),
+          arizaTipi: document.getElementById('report-arizaTipi').value,
+          oncelik: document.getElementById('report-oncelik').value,
+          direktif: document.getElementById('report-direktif').value.trim(),
+          tezgahKodu: document.getElementById('report-tezgahKodu').value.trim()
+        };
+        google.script.run
+          .withSuccessFunction(function(res) {
+            if (res.success) {
+              showToast(res.message);
+              document.getElementById('form-report').reset();
+              loadSavedUser();
+              document.getElementById('report-arizaTipi').value = '';
+              document.getElementById('report-oncelik').value = '';
+            } else {
+              showToast(res.message, true);
+            }
+          })
+          .withFailureFunction(function(err) {
+            showToast('Sunucu hatası: ' + err.message, true);
+          })
+          .saveReport(payload);
+      });
+
+      function loadFaults() {
+        var tbody = document.getElementById('tbody-faults');
+        if (!tbody) return;
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">Yükleniyor...</td></tr>';
+        google.script.run
+          .withSuccessFunction(function(list) {
+            if (!list || list.length === 0) {
+              tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">Aktif arıza yok.</td></tr>';
+              return;
+            }
+            tbody.innerHTML = list.map(function(f) {
+              var oncelikClass = 'badge-priority-normal';
+              var rowClass = 'fault-row-normal';
+              if (f.oncelik === 'Acil') { oncelikClass = 'badge-priority-urgent'; rowClass = 'fault-row-urgent'; }
+              else if (f.oncelik === 'Çok Acil') { oncelikClass = 'badge-priority-very-urgent'; rowClass = 'fault-row-very-urgent'; }
+              var saat = (f.tarihSaat || '').slice(11, 19);
+              var raporlayan = (f.raporlayanAd || '') + ' ' + (f.raporlayanSoyad || '');
+              var btns = '<div class="btn-group btn-group-sm">' +
+                '<button type="button" class="btn btn-outline-primary btn-assign" data-satir-id="' + (f.satirId || '') + '" title="Personel Ata"><i class="bi bi-person-plus"></i></button>' +
+                '<button type="button" class="btn btn-warning btn-start" data-satir-id="' + (f.satirId || '') + '" title="İşi Başlat"><i class="bi bi-play-fill"></i></button>' +
+                '<button type="button" class="btn btn-success btn-complete" data-satir-id="' + (f.satirId || '') + '" title="Arıza Tamamlandı"><i class="bi bi-check-lg"></i></button>' +
+                '</div>';
+              return '<tr class="' + rowClass + '">' +
+                '<td>' + saat + '</td>' +
+                '<td>' + raporlayan + '</td>' +
+                '<td>' + (f.bolum || '-') + '</td>' +
+                '<td>' + (f.tezgahKodu || '-') + '</td>' +
+                '<td><span class="badge ' + oncelikClass + '">' + (f.oncelik || '-') + '</span></td>' +
+                '<td>' + (f.atananPersonel || '-') + '</td>' +
+                '<td>' + (f.durum || '-') + '</td>' +
+                '<td>' + btns + '</td></tr>';
+            }).join('');
+            bindFaultButtons();
+          })
+          .withFailureFunction(function() {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger py-4">Veri yüklenemedi.</td></tr>';
+          })
+          .getActiveFaults();
+      }
+
+      function bindFaultButtons() {
+        document.querySelectorAll('.btn-assign').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            document.getElementById('assign-satirId').value = this.getAttribute('data-satir-id');
+            document.getElementById('assign-personel').value = '';
+            new bootstrap.Modal(document.getElementById('modal-assign')).show();
+          });
+        });
+        document.querySelectorAll('.btn-start').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            var id = this.getAttribute('data-satir-id');
+            google.script.run.withSuccessFunction(function(res) {
+              showToast(res.message, !res.success);
+              if (res.success) loadFaults();
+            }).withFailureFunction(function(err) { showToast(err.message, true); }).startJob(id);
+          });
+        });
+        document.querySelectorAll('.btn-complete').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            document.getElementById('complete-satirId').value = this.getAttribute('data-satir-id');
+            document.getElementById('complete-kokNeden').value = '';
+            document.getElementById('complete-hataTanimi').value = '';
+            document.getElementById('complete-yapilanIslem').value = '';
+            new bootstrap.Modal(document.getElementById('modal-complete')).show();
+          });
+        });
+      }
+
+      document.getElementById('btn-refresh-faults').addEventListener('click', loadFaults);
+
+      document.getElementById('btn-assign-confirm').addEventListener('click', function() {
+        var satirId = document.getElementById('assign-satirId').value;
+        var personel = document.getElementById('assign-personel').value.trim();
+        if (!personel) { showToast('Personel adı girin.', true); return; }
+        google.script.run
+          .withSuccessFunction(function(res) {
+            showToast(res.message, !res.success);
+            if (res.success) { bootstrap.Modal.getInstance(document.getElementById('modal-assign')).hide(); loadFaults(); }
+          })
+          .withFailureFunction(function(err) { showToast(err.message, true); })
+          .assignStaff(satirId, personel);
+      });
+
+      document.getElementById('btn-complete-confirm').addEventListener('click', function() {
+        var satirId = document.getElementById('complete-satirId').value;
+        var kokNeden = document.getElementById('complete-kokNeden').value.trim();
+        var hataTanimi = document.getElementById('complete-hataTanimi').value.trim();
+        var yapilanIslem = document.getElementById('complete-yapilanIslem').value.trim();
+        if (!kokNeden || !hataTanimi || !yapilanIslem) {
+          showToast('Kök neden, hata tanımı ve yapılan işlem zorunludur.', true);
+          return;
+        }
+        google.script.run
+          .withSuccessFunction(function(res) {
+            showToast(res.message, !res.success);
+            if (res.success) {
+              bootstrap.Modal.getInstance(document.getElementById('modal-complete')).hide();
+              loadFaults();
+            }
+          })
+          .withFailureFunction(function(err) { showToast(err.message, true); })
+          .completeJob(satirId, { kokNeden: kokNeden, hataTanimi: hataTanimi, yapilanIslem: yapilanIslem });
+      });
+
+      loadSavedUser();
+    })();
+  </script>
+</body>
+</html>
